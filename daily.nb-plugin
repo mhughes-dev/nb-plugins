@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+###############################################################################
+# daily.nb-plugin
+#
+# A plugin for `nb` providing quick access to a daily journal-like note. If
+# the note for the day does not exist, it will create it, otherwise it will
+# open it for editing.
+#
+# Install with:
+#   nb plugin install daily.nb-plugin
+#
+###############################################################################
+
+# Add the new subcommand names with `_subcommands add <name>`.
+_subcommands add "daily"
+
+# Define help and usage text with `_subcommands describe <subcommand> <usage>`.
+_subcommands describe "daily" <<HEREDOC
+Usage:
+  nb daily
+
+Description:
+  Automatically create and/or edit a note corresponding to the day.
+
+  The folder notes/daily/<year>/ in the current notebook is the default
+  location for daily notes.
+
+HEREDOC
+
+# Define the subcommand as a function, named with a leading underscore.
+_daily() {
+  local _default_folder=
+  _default_folder="notes/daily/$(date +"%Y")"
+  
+  local _selector="${1:-$_default_folder}"
+
+  local _target_folder_relative_path=
+  _target_folder_relative_path="$_selector"
+
+  local _notebook_path=
+  _notebook_path="$(_notebooks current --path)"
+
+  local _notebook_selector=
+  _notebook_selector="$(_notebooks current)"
+
+  # Validate that the selector represents a valid file:
+  if [[   -z "${_target_folder_relative_path:-}"                 ]] ||
+     [[ ! -e "${_notebook_path}/${_target_folder_relative_path}" ]]
+  then
+    printf "Not found: %s\\n" "${_default_folder}"
+    exit 1
+  fi
+
+  local _daily_note_date=
+  _daily_note_date="$(date +"%Y-%m-%d")"
+
+  local _daily_note_filename=
+  _daily_note_filename="$(date +"%Y-%m-%d").md"
+
+  local _daily_note_filepath=
+  _daily_note_filepath="$_notebook_path/$_target_folder_relative_path/$(date +"%Y")/$_daily_note_filename"
+
+  if [[ ! -e "${_notebook_path}/${_target_folder_relative_path}/${_daily_note_filename}" ]]
+  then
+    echo "Adding daily note for $_daily_note_date"
+    # echo "${_notebook_selector}:${_target_folder_relative_path}/${_daily_note_filename}"
+    _add "${_notebook_selector}:${_target_folder_relative_path}/${_daily_note_filename}" --title "$(date +"%Y-%m-%d")"
+  else
+    echo "Editing daily note for $_daily_note_date"
+    # echo "${_notebook_selector}:${_target_folder_relative_path}/${_daily_note_filename}"
+    _open "${_notebook_selector}:${_target_folder_relative_path}/${_daily_note_filename}"
+  fi
+}
+
+# Use `_subcommands alias` to define a full alias with linked help / usage.
+# Aliases also have to be added with `_subcommands add <name>`.
+_subcommands alias "daily" "journal"
+_subcommands alias "daily" "today"
