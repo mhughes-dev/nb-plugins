@@ -2,8 +2,8 @@
 
 ## Miscellaneous plugins for `nb`
 
-- daily
-- ll
+- `daily`
+- `ll`
 
 ## Installation
 
