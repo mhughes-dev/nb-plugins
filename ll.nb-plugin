@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+###############################################################################
+# ll.nb-plugin
+#
+# A plugin for `nb` to quickly get a list of notes with extended information.
+#
+# Install with:
+#   nb plugin install ll.nb-plugin
+#
+###############################################################################
+
+# Add the new subcommand names with `_subcommands add <name>`.
+_subcommands add "ll"
+
+# Define help and usage text with `_subcommands describe <subcommand> <usage>`.
+_subcommands describe "ll" <<HEREDOC
+Usage:
+  nb ll [<notebook>:][<folder-path>/][<id> | <filename> | <title>]
+
+Description:
+  List notebooks and notes in the current notebook, displaying extended 
+  information.
+
+  The output is equivalent to \`nb ls --all --filenames --sort\`.
+
+HEREDOC
+
+# Define the subcommand as a function, named with a leading underscore.
+_ll() {
+  # The selector argument can be an <id>, <filename>, <path>, or <title>, with
+  # or without a preceeding notebook name. Examples:
+  #   1
+  #   example.md
+  #   title
+  #   /path/to/example.md
+  #   notebook:1
+  #   notebook:example.md
+  #   notebook:title
+  #   notebook:/path/to/example.md
+  local _selector="${1:-}"
+
+  local _arguments=()
+
+  if [[ -n "${_selector:-}" ]]
+  then
+    _arguments+=("${_selector:-}")
+  fi
+
+  _arguments+=("--all" "--filenames" "--sort")
+
+  # _help "ls"
+
+  _ls "${_arguments[@]:-}"
+}
+
+# Use `_subcommands alias` to define a full alias with linked help / usage.
+# Aliases also have to be added with `_subcommands add <name>`.
+_subcommands alias "ll" "l"
